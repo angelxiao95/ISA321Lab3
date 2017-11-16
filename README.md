@@ -1,14 +1,21 @@
 # ISA321Lab3
+#Parta
 library(readxl)
 library(dplyr)
 library(tidyverse)
+
+install.packages("lpSolve")
+install.packages("lpSolveAPI")
+library(lpSolve)
+library(lpSolveAPI)
 
 excel_sheets("Fantasy_Football_Data.xlsx")
 FF_wk9 <- read_excel("Fantasy_Football_Data.xlsx", sheet=1, col_names = T)
 FF_wk9$Xi <- {}
 View(FF_wk9)
 
-num.players <- length(FF_wk9$`Player Name`)
+colnames(FF_wk9)[which(names(FF_wk9) == "Player Name")] <- "Player_Name"
+num.players <- length(FF_wk9$Player_Name)
 
 # Optimization
 #setting up the problem
@@ -22,10 +29,21 @@ matrix_Lp <- c(FF_wk9$QB,
                FF_wk9$TE,
                FF_wk9$DEF,
                FF_wk9$FLEX,
-               FF_wk9$Cost)
+               FF_wk9$Cost,
+               FF_wk9$Player_Name == FF_wk9$Player_Name[1],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[2],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[35],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[3],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[186],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[160],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[26],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[43],
+               FF_wk9$Player_Name == FF_wk9$Player_Name[101])
+
+FF_wk9$Player_Name[2]
 
 matrix_Lp <- matrix(matrix_Lp,ncol = 200,byrow = TRUE)
-colnames(matrix_Lp) <- FF_wk9$`Player Name`
+colnames(matrix_Lp) <- FF_wk9$Player_Name
 DF <- as.data.frame(matrix_Lp)
 
 View(matrix_Lp)
@@ -36,33 +54,123 @@ direction <- c("==",
                "==",
                "==",
                "==",
-               "<=")
+               "<=",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==")
 
 rhs <- c(1, # Quarterbacks
          2, # Running Backs
          3, # Wide Receivers
          1, # Tight Ends
-         1, # Defense
+         1, # Defense 
          1, # Flex
-         200)  # Budget
+         200, #Budget
+         0,
+         0,
+         0,
+         0,
+         0,
+         1,
+         1,
+         0,
+         0)  # Zero out player 
 
-#time to solve
-install.packages("lpSolve")
-install.packages("lpSolveAPI")
-library(lpSolve)
-library(lpSolveAPI)
+#time to solve 
 
 LP_Solution <- lp ("max", f.obj, matrix_Lp, direction, rhs, all.bin=TRUE)
 
-?lp
-
-LP_Solution$objval  
+LP_Solution$objval
 LP_Solution$solution
 
 FF_wk9[LP_Solution$solution != 0,]
 
 
 
+
+
+#Partb
+library(readxl)
+library(dplyr)
+library(tidyverse)
+
+install.packages("lpSolve")
+install.packages("lpSolveAPI")
+library(lpSolve)
+library(lpSolveAPI)
+
+#data URL: https://www.fantasysharks.com/apps/Projections/WeeklySalProjections.php?pos=ALL&l=16
+
+excel_sheets("Part_Two_Week_11_FF_Data.xlsx")
+FF_wk11 <- read_excel("Part_Two_Week_11_FF_Data.xlsx", sheet=1, col_names = T)
+View(FF_wk11)
+
+num.players <- length(FF_wk11$Name)
+var.types <- rep("B", num.players)
+
+# Optimization
+#setting up the problem
+f.obj <- FF_wk11$Points
+
+matrix_Lp <- c(FF_wk11$QB,
+               FF_wk11$RB,
+               FF_wk11$WR,
+               FF_wk11$TE,
+               FF_wk11$DST,
+               FF_wk11$FLEX,
+               FF_wk11$Cost,
+               FF_wk11$Name[5],
+               FF_wk11$Name[108],
+               FF_wk11$Rank[187])
+
+FF_wk11$Name[187]
+
+
+matrix_Lp <- matrix(matrix_Lp,ncol = 200,byrow = TRUE)
+colnames(matrix_Lp) <- FF_wk11$Name
+DF <- as.data.frame(matrix_Lp)
+
+View(matrix_Lp)
+
+direction <- c("==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "==",
+               "<=",
+               "==",
+               "==",
+               "==")
+
+rhs <- c(1, # Quarterbacks
+         2, # Running Backs
+         3, # Wide Receivers
+         1, # Tight Ends
+         1, # Defense 
+         1, # Flex
+         50000, #Budget
+         1,
+         1,
+         1)
+         # Zero out player and/or force add player 
+
+#time to solve 
+
+LP_Solution <- lp("max", f.obj, matrix_Lp, direction, rhs, all.bin=TRUE)
+str(FF_wk11)
+LP_Solution$objval
+LP_Solution$solution
+
+FF_wk11[LP_Solution$solution != 0,]
+
+isError <- is.na(FF_wk11$Name)
 
 
 
